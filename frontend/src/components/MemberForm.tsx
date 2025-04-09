@@ -32,7 +32,7 @@ const formSchema = z.object({
   priority: z.coerce.number().int().min(1, {
     message: 'Priority must be at least 1.',
   }).optional(),
-  isActive: z.boolean().default(true),
+  active: z.boolean().default(true),
   linkedin: z.string().url({
     message: 'Please enter a valid URL.',
   }).optional().or(z.literal('')),
@@ -64,7 +64,7 @@ const MemberForm = () => {
       email: '',
       phoneNumber: '',
       priority: 999,
-      isActive: true,
+      active: true,
       linkedin: '',
       twitter: '',
       github: '',
@@ -89,7 +89,7 @@ const MemberForm = () => {
             form.setValue('email', member.email || '');
             form.setValue('phoneNumber', member.phoneNumber || '');
             form.setValue('priority', member.priority || 999);
-            form.setValue('isActive', member.isActive);
+            form.setValue('active', member.active);
             
             // Set social links
             if (member.socialLinks) {
@@ -156,7 +156,7 @@ const MemberForm = () => {
       if (values.email) formData.append('email', values.email);
       if (values.phoneNumber) formData.append('phoneNumber', values.phoneNumber);
       if (values.priority !== undefined) formData.append('priority', values.priority.toString());
-      formData.append('isActive', values.isActive.toString());
+      formData.append('active', values.active.toString());
       
       // Social links
       const socialLinks = {
@@ -392,7 +392,7 @@ const MemberForm = () => {
               
               <FormField
                 control={form.control}
-                name="isActive"
+                name="active"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">

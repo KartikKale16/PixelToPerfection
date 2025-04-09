@@ -21,7 +21,8 @@ import {
   Users2Icon,
   ListIcon,
   EditIcon,
-  MapPinIcon
+  MapPinIcon,
+  ImageIcon
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -199,13 +200,16 @@ const Admin = () => {
               <p className="text-gray-500 text-sm">Manage club membership & roles</p>
             </div>
 
-            {/* Students Management Card */}
-            <div className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer">
+            {/* Gallery Management Card */}
+            <div 
+              className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate('/gallery/manage')}
+            >
               <div className="mx-auto w-20 h-20 flex items-center justify-center bg-green-100 rounded-full mb-4">
-                <GraduationCapIcon className="text-green-500" size={28} />
+                <ImageIcon className="text-green-500" size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-2">Student Registry</h3>
-              <p className="text-gray-500 text-sm">Track academic performance & activities</p>
+              <h3 className="text-xl font-bold mb-2">Gallery Management</h3>
+              <p className="text-gray-500 text-sm">Add and manage gallery images</p>
             </div>
           </div>
         </div>

@@ -7,16 +7,16 @@ const {
   updateMember, 
   deleteMember 
 } = require('../controllers/memberController');
-const { authenticateUser, authorizePermissions } = require('../middleware/authentication');
+const { protect, authorize } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // Public routes
-router.route('/').get(getAllMembers);
-router.route('/:id').get(getMember);
+router.get('/', getAllMembers);
+router.get('/:id', getMember);
 
 // Protected routes
-router.route('/').post(authenticateUser, authorizePermissions('admin'), createMember);
-router.route('/:id')
-  .put(authenticateUser, authorizePermissions('admin'), updateMember)
-  .delete(authenticateUser, authorizePermissions('admin'), deleteMember);
+router.post('/', protect, authorize('admin'), upload.single('image'), createMember);
+router.put('/:id', protect, authorize('admin'), upload.single('image'), updateMember);
+router.delete('/:id', protect, authorize('admin'), deleteMember);
 
 module.exports = router; 

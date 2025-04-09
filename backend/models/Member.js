@@ -30,17 +30,40 @@ const MemberSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  photoUrl: {
+  image: {
     type: String,
     default: '/uploads/default-profile.png'
+  },
+  socialLinks: {
+    linkedin: {
+      type: String,
+      trim: true
+    },
+    twitter: {
+      type: String,
+      trim: true
+    },
+    github: {
+      type: String,
+      trim: true
+    }
+  },
+  joinDate: {
+    type: Date,
+    default: Date.now
   },
   priority: {
     type: Number,
     default: 999
   },
-  isActive: {
+  active: {
     type: Boolean,
     default: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 }, { timestamps: true });
 

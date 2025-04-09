@@ -19,6 +19,8 @@ import EventEdit from "./pages/EventEdit";
 import Members from "./pages/Members";
 import CreateMember from "./pages/CreateMember";
 import EditMember from "./pages/EditMember";
+import Gallery from "./pages/Gallery";
+import GalleryManage from "./pages/GalleryManage";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -91,6 +93,16 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <EditMember />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Gallery Routes */}
+              <Route path="/gallery" element={<Gallery />} />
+              <Route 
+                path="/gallery/manage" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <GalleryManage />
                   </ProtectedRoute>
                 } 
               />

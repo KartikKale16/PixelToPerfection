@@ -168,3 +168,65 @@ export const membersApi = {
     return response.json();
   },
 };
+
+// Gallery API
+export const galleryApi = {
+  // Get all gallery images
+  getGalleryImages: async (params = {}): Promise<ApiResponse<any>> => {
+    const queryString = new URLSearchParams(params as Record<string, string>).toString();
+    const url = queryString ? `${API_URL}/gallery?${queryString}` : `${API_URL}/gallery`;
+    
+    const response = await fetch(url);
+    return response.json();
+  },
+
+  // Get a single gallery image by ID
+  getGalleryImage: async (id: string): Promise<ApiResponse<any>> => {
+    const response = await fetch(`${API_URL}/gallery/${id}`);
+    return response.json();
+  },
+
+  // Upload a new gallery image
+  uploadGalleryImage: async (imageData: FormData): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/gallery`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: imageData, // FormData for file upload
+    });
+    return response.json();
+  },
+
+  // Update an existing gallery image
+  updateGalleryImage: async (id: string, imageData: FormData): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/gallery/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: imageData, // FormData for file upload
+    });
+    return response.json();
+  },
+
+  // Delete a gallery image
+  deleteGalleryImage: async (id: string): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/gallery/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+};

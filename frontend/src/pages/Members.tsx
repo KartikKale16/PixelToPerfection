@@ -47,12 +47,25 @@ const Members = () => {
       try {
         setLoading(true);
         const response = await membersApi.getMembers();
-        if (response.success && response.data) {
-          setMembers(response.data);
+        
+        if (response.success) {
+          // Check if response has members array
+          if (response.members && Array.isArray(response.members)) {
+            setMembers(response.members);
+          } else if (response.data && Array.isArray(response.data)) {
+            setMembers(response.data);
+          } else {
+            console.error('Unexpected response format:', response);
+            toast({
+              title: "Error",
+              description: "Received an unexpected data format from server",
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
             title: "Error",
-            description: "Failed to load committee members",
+            description: response.message || "Failed to load committee members",
             variant: "destructive",
           });
         }
@@ -72,6 +85,7 @@ const Members = () => {
   }, []);
   
   const getInitials = (name: string) => {
+    if (!name) return "??";
     return name
       .split(' ')
       .map(part => part[0])
@@ -141,8 +155,8 @@ const Members = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{member.bio}</p>
-                <p className="text-sm"><span className="font-medium">Email:</span> {member.email}</p>
+                <p className="text-sm text-muted-foreground mb-4">{member.bio || 'No bio available'}</p>
+                <p className="text-sm"><span className="font-medium">Email:</span> {member.email || 'N/A'}</p>
               </CardContent>
               <CardFooter className="flex justify-between items-center pt-2 border-t">
                 <div className="flex gap-2">
@@ -163,10 +177,10 @@ const Members = () => {
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(member.joinDate).toLocaleDateString('en-US', { 
+                  {member.joinDate ? new Date(member.joinDate).toLocaleDateString('en-US', { 
                     year: 'numeric', 
                     month: 'short'
-                  })}
+                  }) : 'N/A'}
                 </span>
               </CardFooter>
             </Card>

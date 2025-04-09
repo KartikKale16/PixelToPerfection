@@ -40,56 +40,116 @@ const createMember = async (req, res, next) => {
 // @route   GET /api/members
 // @access  Public
 const getAllMembers = async (req, res) => {
-  const members = await Member.find({ active: true }).sort('priority');
-  res.status(StatusCodes.OK).json({ members, count: members.length });
+  try {
+    const members = await Member.find({ active: true })
+                               .sort('priority')
+                               .populate('createdBy', 'username fullName');
+                               
+    res.status(StatusCodes.OK).json({ 
+      success: true,
+      count: members.length,
+      data: members
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message || 'Failed to fetch members'
+    });
+  }
 };
 
 // @desc    Get single member
 // @route   GET /api/members/:id
 // @access  Public
 const getMember = async (req, res) => {
-  const { id: memberId } = req.params;
-  const member = await Member.findOne({ _id: memberId });
+  try {
+    const { id: memberId } = req.params;
+    const member = await Member.findOne({ _id: memberId })
+                             .populate('createdBy', 'username fullName');
 
-  if (!member) {
-    throw new NotFoundError(`No member found with id: ${memberId}`);
+    if (!member) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: `No member found with id: ${memberId}`
+      });
+    }
+
+    res.status(StatusCodes.OK).json({ 
+      success: true,
+      data: member
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message || 'Failed to fetch member'
+    });
   }
-
-  res.status(StatusCodes.OK).json({ member });
 };
 
 // @desc    Update member
 // @route   PUT /api/members/:id
 // @access  Private (Admin)
 const updateMember = async (req, res) => {
-  const { id: memberId } = req.params;
-  
-  const member = await Member.findOneAndUpdate(
-    { _id: memberId }, 
-    req.body, 
-    { new: true, runValidators: true }
-  );
+  try {
+    const { id: memberId } = req.params;
+    
+    // Handle image upload
+    if (req.file) {
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      req.body.image = `${baseUrl}/uploads/${req.file.filename}`;
+    }
 
-  if (!member) {
-    throw new NotFoundError(`No member found with id: ${memberId}`);
+    const member = await Member.findOneAndUpdate(
+      { _id: memberId }, 
+      req.body, 
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'username fullName');
+
+    if (!member) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: `No member found with id: ${memberId}`
+      });
+    }
+
+    res.status(StatusCodes.OK).json({ 
+      success: true,
+      data: member 
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message || 'Failed to update member'
+    });
   }
-
-  res.status(StatusCodes.OK).json({ member });
 };
 
 // @desc    Delete member
 // @route   DELETE /api/members/:id
 // @access  Private (Admin)
 const deleteMember = async (req, res) => {
-  const { id: memberId } = req.params;
-  
-  const member = await Member.findOneAndDelete({ _id: memberId });
+  try {
+    const { id: memberId } = req.params;
+    
+    const member = await Member.findOneAndDelete({ _id: memberId });
 
-  if (!member) {
-    throw new NotFoundError(`No member found with id: ${memberId}`);
+    if (!member) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: `No member found with id: ${memberId}`
+      });
+    }
+
+    res.status(StatusCodes.OK).json({ 
+      success: true,
+      message: 'Member removed successfully' 
+    });
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message || 'Failed to delete member'
+    });
   }
-
-  res.status(StatusCodes.OK).json({ msg: 'Member removed successfully' });
 };
 
 module.exports = {

@@ -52,7 +52,7 @@ const Navbar = () => {
             <Link to="/" className="text-foreground hover:text-primary transition-colors">Home</Link>
             <Link to="#about" className="text-foreground hover:text-primary transition-colors">About</Link>
             <Link to="/events" className="text-foreground hover:text-primary transition-colors">Events</Link>
-            <Link to="#gallery" className="text-foreground hover:text-primary transition-colors">Gallery</Link>
+            <Link to="/gallery" className="text-foreground hover:text-primary transition-colors">Gallery</Link>
             <Link to="#contact" className="text-foreground hover:text-primary transition-colors">Contact</Link>
           </div>
 
@@ -116,7 +116,7 @@ const Navbar = () => {
               <Link to="/" className="text-foreground hover:text-primary p-2">Home</Link>
               <Link to="#about" className="text-foreground hover:text-primary p-2">About</Link>
               <Link to="/events" className="text-foreground hover:text-primary p-2">Events</Link>
-              <Link to="#gallery" className="text-foreground hover:text-primary p-2">Gallery</Link>
+              <Link to="/gallery" className="text-foreground hover:text-primary p-2">Gallery</Link>
               <Link to="#contact" className="text-foreground hover:text-primary p-2">Contact</Link>
               
               <div className="pt-4 flex space-x-4">
