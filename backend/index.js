@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const authRoutes = require('./routes/authRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 });
+
+// Mount auth routes
+app.use('/api/auth', authRoutes);
 
 app.get('/test', (req, res) => {
   res.send('Test route is working!');
