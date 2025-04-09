@@ -6,7 +6,8 @@ const path = require('path');
 const fs = require('fs');
 const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
-const errorHandler = require('./middleware/errorHandler');
+const memberRoutes = require('./routes/memberRoutes');
+const errorHandlerMiddleware = require('./middleware/error-handler');
 
 // Load environment variables
 dotenv.config();
@@ -40,13 +41,14 @@ app.get('/', (req, res) => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/members', memberRoutes);
 
 app.get('/test', (req, res) => {
   res.send('Test route is working!');
 });
 
 // Error handling middleware
-app.use(errorHandler);
+app.use(errorHandlerMiddleware);
 
 // Connect to MongoDB
 mongoose
