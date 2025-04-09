@@ -35,16 +35,23 @@ const Login = () => {
 
     try {
       // Use the login function from AuthContext
-      const success = await login(formData.username, formData.password);
+      const result = await login(formData.username, formData.password);
 
-      if (success) {
+      if (result) {
         toast({
           title: "Login Successful",
           description: `Welcome back!`,
         });
         
-        // Navigate to appropriate page
-        navigate('/events');
+        // Navigate based on user role
+        // The login function should return the user info including role
+        const userRole = localStorage.getItem('userRole');
+        
+        if (userRole === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/events');
+        }
       } else {
         toast({
           title: "Login Failed",

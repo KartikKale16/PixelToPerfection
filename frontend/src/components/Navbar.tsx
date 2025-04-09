@@ -76,6 +76,11 @@ const Navbar = () => {
                     <DropdownMenuItem asChild>
                       <Link to="/events/create">Create Event</Link>
                     </DropdownMenuItem>
+                    {user?.role === 'admin' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                   </DropdownMenuContent>

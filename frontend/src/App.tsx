@@ -16,6 +16,9 @@ import CreateEvent from "./pages/CreateEvent";
 import EventListing from "./pages/EventListing";
 import EventDetails from "./pages/EventDetails";
 import EventEdit from "./pages/EventEdit";
+import Members from "./pages/Members";
+import CreateMember from "./pages/CreateMember";
+import EditMember from "./pages/EditMember";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -70,6 +73,24 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <EventEdit />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Members Routes */}
+              <Route path="/members" element={<Members />} />
+              <Route 
+                path="/members/create" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <CreateMember />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/members/edit/:id" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <EditMember />
                   </ProtectedRoute>
                 } 
               />

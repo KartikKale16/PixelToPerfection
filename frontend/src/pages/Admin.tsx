@@ -188,7 +188,10 @@ const Admin = () => {
             </div>
 
             {/* Club Members Management Card */}
-            <div className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer">
+            <div 
+              className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate('/members')}
+            >
               <div className="mx-auto w-20 h-20 flex items-center justify-center bg-pink-100 rounded-full mb-4">
                 <UsersIcon className="text-pink-500" size={28} />
               </div>
