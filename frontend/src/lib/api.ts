@@ -230,3 +230,83 @@ export const galleryApi = {
     return response.json();
   },
 };
+
+// Students API
+export const studentsApi = {
+  // Get all students
+  getStudents: async (params = {}): Promise<ApiResponse<any>> => {
+    const queryString = new URLSearchParams(params as Record<string, string>).toString();
+    const url = queryString ? `${API_URL}/students?${queryString}` : `${API_URL}/students`;
+    
+    const response = await fetch(url);
+    return response.json();
+  },
+
+  // Get a single student by ID
+  getStudent: async (id: string): Promise<ApiResponse<any>> => {
+    const response = await fetch(`${API_URL}/students/${id}`);
+    return response.json();
+  },
+
+  // Create a new student
+  createStudent: async (studentData: FormData): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/students`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: studentData, // FormData for file upload
+    });
+    return response.json();
+  },
+
+  // Update an existing student
+  updateStudent: async (id: string, studentData: FormData): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/students/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: studentData, // FormData for file upload
+    });
+    return response.json();
+  },
+
+  // Delete a student
+  deleteStudent: async (id: string): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const response = await fetch(`${API_URL}/students/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  },
+  
+  // Import students from CSV
+  importStudentsCSV: async (csvFile: File): Promise<ApiResponse<any>> => {
+    const token = localStorage.getItem('token');
+    if (!token) return { success: false, message: 'Authentication required' };
+
+    const formData = new FormData();
+    formData.append('csvFile', csvFile);
+
+    const response = await fetch(`${API_URL}/students/import-csv`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+    return response.json();
+  },
+};

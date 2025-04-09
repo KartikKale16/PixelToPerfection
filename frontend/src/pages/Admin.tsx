@@ -211,6 +211,18 @@ const Admin = () => {
               <h3 className="text-xl font-bold mb-2">Gallery Management</h3>
               <p className="text-gray-500 text-sm">Add and manage gallery images</p>
             </div>
+
+            {/* Student Directory Card */}
+            <div 
+              className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate('/students')}
+            >
+              <div className="mx-auto w-20 h-20 flex items-center justify-center bg-amber-100 rounded-full mb-4">
+                <GraduationCapIcon className="text-amber-500" size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Student Directory</h3>
+              <p className="text-gray-500 text-sm">Manage student information and records</p>
+            </div>
           </div>
         </div>
 

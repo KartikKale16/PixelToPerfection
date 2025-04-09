@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const memberRoutes = require('./routes/memberRoutes');
 const galleryRoutes = require('./routes/galleryRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
 // Load environment variables
@@ -44,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/gallery', galleryRoutes);
+app.use('/api/students', studentRoutes);
 
 app.get('/test', (req, res) => {
   res.send('Test route is working!');
