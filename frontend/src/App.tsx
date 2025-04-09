@@ -14,6 +14,8 @@ import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import CreateEvent from "./pages/CreateEvent";
 import EventListing from "./pages/EventListing";
+import EventDetails from "./pages/EventDetails";
+import EventEdit from "./pages/EventEdit";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -39,12 +41,35 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route path="/events/list" element={<EventListing />} />
+              <Route 
+                path="/events/list" 
+                element={
+                  <ProtectedRoute>
+                    <EventListing />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/events/create" 
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'member']}>
                     <CreateEvent />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/events/:id" 
+                element={
+                  <ProtectedRoute>
+                    <EventDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/events/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <EventEdit />
                   </ProtectedRoute>
                 } 
               />
