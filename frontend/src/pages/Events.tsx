@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Calendar, Clock, MapPin, Search, Filter, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, Search, Filter, X, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,10 +12,12 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-mobile";
+import { eventsApi } from '@/lib/api';
+import { toast } from '@/components/ui/use-toast';
 
-// Sample event data
-const allEvents = [
-  // Upcoming events
+// Sample event data as fallback
+const sampleEvents = [
+  // Truncated for brevity - we'll use this as fallback if API fails
   {
     id: 1,
     title: "Annual Tech Hackathon",
@@ -29,122 +30,113 @@ const allEvents = [
     type: "upcoming",
     image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
   },
-  {
-    id: 2,
-    title: "Industry Expert Talk Series",
-    date: "September 28, 2025",
-    time: "2:00 PM - 4:00 PM",
-    description: "Join us for an insightful talk by industry leaders sharing their experiences and the latest trends in technology.",
-    location: "Virtual Event",
-    tags: ["Workshop", "Learning"],
-    featured: false,
-    type: "upcoming",
-    image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  {
-    id: 3,
-    title: "Programming Workshop",
-    date: "September 10, 2025",
-    time: "3:00 PM - 5:30 PM",
-    description: "Hands-on workshop on advanced programming concepts and their practical applications.",
-    location: "Computer Lab 202",
-    tags: ["Workshop", "Coding"],
-    featured: false,
-    type: "upcoming",
-    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  {
-    id: 4,
-    title: "Tech Career Fair",
-    date: "November 5, 2025",
-    time: "10:00 AM - 4:00 PM",
-    description: "Connect with tech companies and explore career opportunities in the field of computer engineering.",
-    location: "University Center, Grand Hall",
-    tags: ["Career", "Networking"],
-    featured: true,
-    type: "upcoming",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  
-  // Past events
-  {
-    id: 5,
-    title: "Web Development Bootcamp",
-    date: "August 15-17, 2025",
-    time: "9:00 AM - 5:00 PM",
-    description: "An intensive 3-day bootcamp covering frontend and backend web development technologies.",
-    location: "Innovation Lab, Room 105",
-    tags: ["Workshop", "Coding", "Web Development"],
-    featured: false,
-    type: "past",
-    image: "https://images.unsplash.com/photo-1593642634315-48f5414c3ad9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  {
-    id: 6,
-    title: "Alumni Networking Night",
-    date: "July 25, 2025",
-    time: "6:00 PM - 9:00 PM",
-    description: "An evening of networking with alumni working in various tech companies.",
-    location: "University Center, Ballroom",
-    tags: ["Networking", "Social"],
-    featured: false,
-    type: "past",
-    image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  {
-    id: 7,
-    title: "Artificial Intelligence Seminar",
-    date: "June 12, 2025",
-    time: "1:00 PM - 3:00 PM",
-    description: "Learn about the latest advancements in AI and machine learning from field experts.",
-    location: "Science Building, Auditorium",
-    tags: ["Seminar", "AI", "Learning"],
-    featured: false,
-    type: "past",
-    image: "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
-  {
-    id: 8,
-    title: "Spring Tech Fest",
-    date: "April 20-22, 2025",
-    time: "All Day",
-    description: "Annual technology festival featuring competitions, workshops, and guest lectures.",
-    location: "University Campus",
-    tags: ["Festival", "Competition"],
-    featured: true,
-    type: "past",
-    image: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80"
-  },
+  // ... more sample events can be added here
 ];
+
+// Interface for event data
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  startDateTime: string;
+  endDateTime: string;
+  location: string;
+  image: string;
+  tags: string[];
+  attendees: number;
+  organizer: {
+    _id: string;
+    username: string;
+    fullName: string;
+  };
+}
 
 const Events = () => {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
-  const [openEventId, setOpenEventId] = useState<number | null>(null);
+  const [openEventId, setOpenEventId] = useState<string | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  // Filter events based on search term, selected tag and active tab
-  const filteredEvents = allEvents.filter(event => {
-    const matchesTab = event.type === activeTab;
+  // Fetch events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const sort = activeTab === "upcoming" ? "upcoming" : "past";
+        const response = await eventsApi.getAllEvents({ sort });
+        
+        if (response.success && response.data) {
+          setEvents(response.data);
+          
+          // Extract all unique tags
+          const tags = [...new Set(response.data.flatMap(event => event.tags))];
+          setAllTags(tags);
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to load events. Using sample data instead.",
+            variant: "destructive",
+          });
+          setEvents(sampleEvents);
+          setAllTags([...new Set(sampleEvents.flatMap(event => event.tags))]);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load events. Using sample data instead.",
+          variant: "destructive",
+        });
+        setEvents(sampleEvents);
+        setAllTags([...new Set(sampleEvents.flatMap(event => event.tags))]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [activeTab]);
+  
+  // Filter events based on search term and selected tag
+  const filteredEvents = events.filter(event => {
     const matchesSearch = searchTerm === "" || 
       event.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
       event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTag = selectedTag === "" || selectedTag === "all-tags" || event.tags.includes(selectedTag);
+    const matchesTag = selectedTag === "" || selectedTag === "all-tags" || 
+      (event.tags && event.tags.includes(selectedTag));
     
-    return matchesTab && matchesSearch && matchesTag;
+    return matchesSearch && matchesTag;
   });
   
-  // Get unique tags from all events
-  const allTags = [...new Set(allEvents.flatMap(event => event.tags))];
-
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedTag("");
   };
 
+  // Format date and time
+  const formatEventDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatEventTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+  };
+
   // Event details component - reused for both dialog and drawer
-  const EventDetails = ({ event }) => (
+  const EventDetails = ({ event }: { event: Event }) => (
     <div className="space-y-4">
       <div className="w-full h-60 overflow-hidden rounded-lg mb-4">
         <img 
@@ -156,11 +148,11 @@ const Events = () => {
       <div className="flex flex-col space-y-2">
         <div className="flex items-center text-sm text-gray-500">
           <Calendar className="mr-2 h-4 w-4" />
-          <span>{event.date}</span>
+          <span>{formatEventDate(event.startDateTime)}</span>
         </div>
         <div className="flex items-center text-sm text-gray-500">
           <Clock className="mr-2 h-4 w-4" />
-          <span>{event.time}</span>
+          <span>{formatEventTime(event.startDateTime)} - {formatEventTime(event.endDateTime)}</span>
         </div>
         <div className="flex items-center text-sm text-gray-500">
           <MapPin className="mr-2 h-4 w-4" />
@@ -169,7 +161,7 @@ const Events = () => {
       </div>
       <p className="text-gray-700">{event.description}</p>
       <div className="flex flex-wrap gap-2 mt-2">
-        {event.tags.map((tag, tagIndex) => (
+        {event.tags && event.tags.map((tag, tagIndex) => (
           <Badge key={tagIndex} variant="secondary" className="bg-secondary/80">
             {tag}
           </Badge>
@@ -248,95 +240,116 @@ const Events = () => {
             defaultValue="upcoming" 
             value={activeTab} 
             onValueChange={setActiveTab}
-            className="w-full"
+            className="mb-8"
           >
-            <TabsList className="grid w-full grid-cols-2 mb-8 rounded-lg bg-blue-50 p-1">
-              <TabsTrigger 
-                value="upcoming" 
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
-              >
-                Upcoming Events
-              </TabsTrigger>
-              <TabsTrigger 
-                value="past" 
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"
-              >
-                Past Events
-              </TabsTrigger>
+            <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
+              <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
+              <TabsTrigger value="past">Past Events</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="upcoming" className="mt-0">
-              {filteredEvents.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredEvents.map((event) => (
-                    <EventCard 
-                      key={event.id} 
-                      event={event} 
-                      setOpenEventId={setOpenEventId} 
-                      isMobile={isMobile}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 bg-blue-50/50 rounded-lg">
-                  <p className="text-gray-500">No upcoming events found matching your criteria.</p>
-                  <Button variant="link" onClick={handleClearFilters}>Clear filters</Button>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="past" className="mt-0">
-              {filteredEvents.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredEvents.map((event) => (
-                    <EventCard 
-                      key={event.id} 
-                      event={event} 
-                      setOpenEventId={setOpenEventId}
-                      isMobile={isMobile} 
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 bg-blue-50/50 rounded-lg">
-                  <p className="text-gray-500">No past events found matching your criteria.</p>
-                  <Button variant="link" onClick={handleClearFilters}>Clear filters</Button>
-                </div>
-              )}
-            </TabsContent>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <span className="ml-3 text-lg">Loading events...</span>
+              </div>
+            ) : (
+              <>
+                <TabsContent value="upcoming" className="mt-6">
+                  {filteredEvents.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500 text-lg">No upcoming events found.</p>
+                      {(searchTerm || selectedTag) && (
+                        <Button 
+                          variant="outline" 
+                          onClick={handleClearFilters}
+                          className="mt-4"
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredEvents.map(event => (
+                        <EventCard 
+                          key={event._id}
+                          event={event}
+                          setOpenEventId={setOpenEventId}
+                          isMobile={isMobile}
+                          formatDate={formatEventDate}
+                          formatTime={formatEventTime}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="past" className="mt-6">
+                  {filteredEvents.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500 text-lg">No past events found.</p>
+                      {(searchTerm || selectedTag) && (
+                        <Button 
+                          variant="outline" 
+                          onClick={handleClearFilters}
+                          className="mt-4"
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredEvents.map(event => (
+                        <EventCard 
+                          key={event._id}
+                          event={event}
+                          setOpenEventId={setOpenEventId}
+                          isMobile={isMobile}
+                          formatDate={formatEventDate}
+                          formatTime={formatEventTime}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </>
+            )}
           </Tabs>
         </div>
       </div>
-      
-      {/* Dialogs for event details (desktop) */}
-      {!isMobile && allEvents.map(event => (
-        <Dialog key={event.id} open={openEventId === event.id} onOpenChange={() => setOpenEventId(null)}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">{event.title}</DialogTitle>
-            </DialogHeader>
-            <EventDetails event={event} />
-          </DialogContent>
-        </Dialog>
-      ))}
 
-      {/* Drawers for event details (mobile) */}
-      {isMobile && allEvents.map(event => (
-        <Drawer key={event.id} open={openEventId === event.id} onOpenChange={() => setOpenEventId(null)}>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle className="text-xl">{event.title}</DrawerTitle>
-            </DrawerHeader>
-            <div className="px-4">
-              <EventDetails event={event} />
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="outline" className="w-full">Close</Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+      {/* Event detail modals - display based on device type */}
+      {filteredEvents.map(event => (
+        <React.Fragment key={event._id}>
+          {isMobile ? (
+            <Drawer open={openEventId === event._id} onOpenChange={() => setOpenEventId(null)}>
+              <DrawerContent>
+                <DrawerHeader className="text-left">
+                  <DrawerTitle>{event.title}</DrawerTitle>
+                  <DrawerDescription>Organized by {event.organizer?.fullName || event.organizer?.username}</DrawerDescription>
+                </DrawerHeader>
+                <div className="px-4 py-2">
+                  <EventDetails event={event} />
+                </div>
+                <DrawerFooter className="pt-2">
+                  <DrawerClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <Dialog open={openEventId === event._id} onOpenChange={() => setOpenEventId(null)}>
+              <DialogContent className="sm:max-w-[525px]">
+                <DialogHeader>
+                  <DialogTitle>{event.title}</DialogTitle>
+                </DialogHeader>
+                <EventDetails event={event} />
+              </DialogContent>
+            </Dialog>
+          )}
+        </React.Fragment>
       ))}
       
       <Footer />
@@ -345,114 +358,70 @@ const Events = () => {
 };
 
 // Event card component
-const EventCard = ({ event, setOpenEventId, isMobile }) => {
+const EventCard = ({ 
+  event, 
+  setOpenEventId, 
+  isMobile,
+  formatDate,
+  formatTime
+}) => {
   const EventImage = () => (
-    <div 
-      className="h-40 w-full overflow-hidden rounded-t-lg bg-blue-100"
-      style={{ position: 'relative' }}
-    >
+    <div className="w-full h-48 overflow-hidden rounded-t-lg">
       <img 
         src={event.image} 
         alt={event.title} 
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
       />
-      {event.featured && (
-        <Badge variant="default" className="absolute top-2 right-2 bg-primary text-primary-foreground">
-          Featured
-        </Badge>
-      )}
     </div>
   );
 
+  const EventContent = () => (
+    <>
+      <div className="p-5">
+        <h3 className="font-bold text-xl mb-2 line-clamp-1">{event.title}</h3>
+        
+        <div className="flex flex-col space-y-2 mb-3">
+          <div className="flex items-center text-sm text-gray-500">
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>{formatDate(event.startDateTime)}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Clock className="mr-2 h-4 w-4" />
+            <span>{formatTime(event.startDateTime)}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <MapPin className="mr-2 h-4 w-4" />
+            <span className="line-clamp-1">{event.location}</span>
+          </div>
+        </div>
+        
+        <p className="text-gray-700 mb-4 line-clamp-2">{event.description}</p>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          {event.tags && event.tags.map((tag, tagIndex) => (
+            <Badge key={tagIndex} variant="secondary" className="bg-secondary/80">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      
+      <CardFooter className="p-4 pt-0">
+        <Button 
+          onClick={() => setOpenEventId(event._id)} 
+          className="w-full"
+        >
+          View Details
+        </Button>
+      </CardFooter>
+    </>
+  );
+
   return (
-    <div onClick={() => setOpenEventId(event.id)}>
-      {isMobile ? (
-        <Card className="group h-full flex flex-col bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer">
-          <EventImage />
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl group-hover:text-primary transition-colors">{event.title}</CardTitle>
-            <div className="flex items-center text-sm text-gray-500 mt-2">
-              <Calendar className="mr-2 h-4 w-4" />
-              <span>{event.date}</span>
-            </div>
-          </CardHeader>
-          <CardContent className="py-0 flex-grow">
-            <p className="text-gray-700 line-clamp-2">{event.description}</p>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {event.tags.slice(0, 2).map((tag, tagIndex) => (
-                <Badge key={tagIndex} variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100">
-                  {tag}
-                </Badge>
-              ))}
-              {event.tags.length > 2 && (
-                <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100">
-                  +{event.tags.length - 2}
-                </Badge>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter className="pt-3">
-            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-white transition-colors">
-              View Details
-            </Button>
-          </CardFooter>
-        </Card>
-      ) : (
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <Card className="group h-full flex flex-col bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer">
-              <EventImage />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl group-hover:text-primary transition-colors">{event.title}</CardTitle>
-                <div className="flex items-center text-sm text-gray-500 mt-2">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  <span>{event.date}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="py-0 flex-grow">
-                <p className="text-gray-700 line-clamp-2">{event.description}</p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {event.tags.slice(0, 2).map((tag, tagIndex) => (
-                    <Badge key={tagIndex} variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100">
-                      {tag}
-                    </Badge>
-                  ))}
-                  {event.tags.length > 2 && (
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100">
-                      +{event.tags.length - 2}
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="pt-3">
-                <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-white transition-colors">
-                  View Details
-                </Button>
-              </CardFooter>
-            </Card>
-          </HoverCardTrigger>
-          <HoverCardContent side="right" align="start" className="w-80 p-0">
-            <div className="p-4">
-              <h4 className="font-semibold">{event.title}</h4>
-              <div className="flex items-center text-sm text-gray-500 mt-2">
-                <Calendar className="mr-2 h-4 w-4" />
-                <span>{event.date}</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 mt-1">
-                <Clock className="mr-2 h-4 w-4" />
-                <span>{event.time}</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 mt-1">
-                <MapPin className="mr-2 h-4 w-4" />
-                <span>{event.location}</span>
-              </div>
-              <p className="text-sm text-gray-700 mt-2 line-clamp-3">{event.description}</p>
-              <Button size="sm" variant="link" className="mt-2 p-0">Click to view more</Button>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      )}
-    </div>
+    <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow rounded-xl">
+      <EventImage />
+      <EventContent />
+    </Card>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isAdmin, fetchWithAuth } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
+import { eventsApi } from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { toast } from '@/components/ui/use-toast';
@@ -26,30 +27,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const Admin = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [timeframe, setTimeframe] = useState('week');
+  const [eventCount, setEventCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch event data
+  useEffect(() => {
+    const fetchEventData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await eventsApi.getAllEvents();
+        if (response.success) {
+          setEventCount(response.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEventData();
+  }, []);
 
   // Check if user is admin
   useEffect(() => {
-    if (!isAdmin()) {
+    if (!isAuthenticated || user?.role !== 'admin') {
       toast({
         title: "Access Denied",
         description: "You need admin privileges to access this page.",
         variant: "destructive",
       });
       navigate('/');
-      return;
     }
-
-    // Verify token validity with backend
-    const verifyToken = async () => {
-      const data = await fetchWithAuth('http://localhost:5000/api/auth/me');
-      if (!data || !data.success) {
-        navigate('/login');
-      }
-    };
-
-    verifyToken();
-  }, [navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -126,10 +138,10 @@ const Admin = () => {
                 <CalendarIcon className="text-cyan-500" />
               </div>
               <div className="flex items-baseline">
-                <span className="text-5xl font-bold">12</span>
+                <span className="text-5xl font-bold">{isLoading ? '...' : eventCount}</span>
                 <span className="ml-3 text-green-500 flex items-center text-sm">
                   <ArrowUpIcon size={14} className="mr-1" />
-                  +3 this month
+                  Events scheduled
                 </span>
               </div>
               
@@ -167,7 +179,7 @@ const Admin = () => {
           <h2 className="text-2xl font-bold mb-6">Club Services</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Events Management Card */}
-            <div className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/events/create')}>
+            <div className="bg-white p-8 rounded-xl shadow-sm text-center hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/events/list')}>
               <div className="mx-auto w-20 h-20 flex items-center justify-center bg-blue-100 rounded-full mb-4">
                 <CalendarIcon className="text-blue-500" size={28} />
               </div>

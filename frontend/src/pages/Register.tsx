@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { setAuthData } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
@@ -75,37 +76,24 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          username: formData.username,
-          password: formData.password,
-          role: formData.role
-        }),
+      // Use the register function from AuthContext
+      const success = await register({
+        fullName: formData.fullName,
+        username: formData.username,
+        password: formData.password,
+        role: formData.role
       });
 
-      const data = await response.json();
-
-      if (setAuthData(data)) {
+      if (success) {
         toast({
           title: "Registration Successful",
           description: "Welcome to PixelToPerfection!",
         });
-        
-        // Redirect based on role
-        if (data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/events');
-        }
+        navigate('/events');
       } else {
         toast({
           title: "Registration Failed",
-          description: data.message || "Could not register your account",
+          description: "Could not register your account",
           variant: "destructive",
         });
       }

@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
-import { setAuthData } from '@/lib/auth';
+import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -33,37 +34,21 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Make API call to login with role
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          role: formData.role
-        }),
-      });
+      // Use the login function from AuthContext
+      const success = await login(formData.username, formData.password);
 
-      const data = await response.json();
-
-      if (setAuthData(data)) {
+      if (success) {
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${data.user.fullName || data.user.username}!`,
+          description: `Welcome back!`,
         });
         
-        // Redirect based on role
-        if (data.user.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/events');
-        }
+        // Navigate to appropriate page
+        navigate('/events');
       } else {
         toast({
           title: "Login Failed",
-          description: data.message || "Invalid credentials",
+          description: "Invalid credentials",
           variant: "destructive",
         });
       }
