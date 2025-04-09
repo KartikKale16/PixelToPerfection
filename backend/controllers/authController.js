@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { fullName, username, password, role } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ username });
@@ -26,6 +26,7 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
+      fullName,
       username,
       password,
       role
@@ -39,6 +40,7 @@ exports.register = async (req, res) => {
       token,
       user: {
         id: user._id,
+        fullName: user.fullName,
         username: user.username,
         role: user.role
       }
@@ -56,7 +58,7 @@ exports.register = async (req, res) => {
 // @access  Public
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, role } = req.body;
 
     // Check for user
     const user = await User.findOne({ username });
@@ -73,6 +75,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({ 
         success: false, 
         message: 'Invalid credentials' 
+      });
+    }
+
+    // Check if role matches (if role is provided)
+    if (role && user.role !== role) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Invalid role.'
       });
     }
 
@@ -105,7 +115,12 @@ exports.getMe = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      user
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        role: user.role
+      }
     });
   } catch (error) {
     res.status(500).json({
