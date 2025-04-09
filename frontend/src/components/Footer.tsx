@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -16,20 +15,8 @@ const Footer = () => {
               Association of Computer Engineering Students - Building the future of technology leaders.
             </p>
             <div className="flex space-x-4 pt-2">
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+              <a href="https://www.instagram.com/acestssm?utm_source=qr&igsh=MXBpZXgxaTdqYW5rNw==" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary transition-colors">
                 <Instagram size={20} />
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
-                <Linkedin size={20} />
-              </a>
-              <a href="#" className="text-gray-500 hover:text-primary transition-colors">
-                <Github size={20} />
               </a>
             </div>
           </div>
